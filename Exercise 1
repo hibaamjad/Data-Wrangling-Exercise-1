@@ -1,0 +1,56 @@
+install.packages("dplyr")
+install.packages("tidyr")
+
+library(dplyr)
+library(tidyr)
+
+#load the data in RStudio
+
+df_refine <- tbl_df(refine_original)
+
+
+#clean up brand names
+
+df_refine$company <- gsub(".*s$", "philips", df_refine$company,ignore.case = TRUE)
+
+df_refine$company <- gsub(".*[o|0]$", "akzo", df_refine$company,ignore.case = TRUE)
+
+df_refine$company <- gsub(".*n .*", "van houten", df_refine$company,ignore.case = TRUE)
+
+df_refine$company <- gsub("^u.*r$", "unilever", df_refine$company,ignore.case = TRUE)
+
+
+#separate product code and number
+
+df_refined <- seperate(df_refine, 'Product code / number', c("product_code", "product_number")
+
+
+#add product categories: add new column "product_category" with values from product_code; then replace values
+
+df_refined_new <- df_refined %>% mutate(product_category = (product_code))
+df_refined_new$product_category[df_refined_new$product_category %in% "p"] <- "Smartphone"
+df_refined_new$product_category[df_refined_new$product_category %in% "v"] <- "TV"
+df_refined_new$product_category[df_refined_new$product_category %in% "x"] <- "Laptop"
+df_refined_new$product_category[df_refined_new$product_category %in% "q"] <- "Tablet"
+
+#add full address for geocoding
+
+df_refined_new <- unite(df_refined_new, full_address, address, city, county, remove = FALSE)
+
+
+#create dummy variables for company and product category
+
+df_refined_new <- mutate(df_refined_new, company_philips = as.numeric((company == "philips")))
+df_refined_new <- mutate(df_refined_new, company_akzo = as.numeric((company == "akzo")))
+df_refined_new <- mutate(df_refined_new, company_van_houten = as.numeric((company == "van houten")))
+df_refined_new <- mutate(df_refined_new, company_unilever = as.numeric((company == "unilever")))
+
+df_refined_new <- mutate(df_refined_new, product_smartphone = as.numeric((product_code  == "p")))
+df_refined_new <- mutate(df_refined_new, product_tv = as.numeric((product_code == "v")))
+df_refined_new <- mutate(df_refined_new, product_laptop = as.numeric((product_code  == "x")))
+df_refined_new <- mutate(df_refined_new, product_tablet = as.numeric((product_code  == "q")))
+
+#submit the project on Github
+
+write.csv(df_refined_new, "refine_clean.csv")
+
